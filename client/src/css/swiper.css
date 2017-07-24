@@ -1,0 +1,91 @@
+ /*swiper-container start */
+.swiper-container {
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+/* swiper-container end */
+
+/* swiper-slider start */
+.swiper-container .swiper-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition-timing-function: ease-in;
+    transform: translateZ( 0 );
+    transition-duration: .5s;
+}
+.swiper-container .swiper-slider {
+    position: absolute;
+    width: 100%;
+}
+.swiper-container .swiper-slider img {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    height: auto;
+}
+/* swiper-slider end */
+
+/* swiper-nav-button start */
+@media (max-width: 768px) {
+    .swiper-container button.prev,
+    .swiper-container button.next {
+        display: none;
+    }
+}
+@media (min-width: 769px) {
+    .swiper-container button.prev,
+    .swiper-container button.next {
+        position: absolute;
+        top: 0;
+        margin: 0;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        font-size: 10px;
+    }
+    .swiper-container button.prev:focus,
+    .swiper-container button.next:focus {
+        outline:none;
+        padding:0;
+
+    }
+    .swiper-container button.prev {
+        float: left;
+        left: 10px;
+        background: url("../../resource/images/left_arrow.png") no-repeat 50%;
+    }
+    .swiper-container button.next {
+        float: right;
+        right: 10px;
+        background: url("../../resource/images/right_arrow.png") no-repeat 50%;
+    }
+}
+/* swiper-nav-button end */
+
+/* swiper-pagination start */
+.swiper-container .swiper-pagination {
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    position: absolute;
+    text-align: center;
+}
+.swiper-container .swiper-pagination>.swiper-bullet {
+    width: 7px;
+    height: 8px;
+    text-align: center;
+    background-color: white;
+    margin: 0 0 0 5px;
+    opacity: .6;
+    display: inline-block;
+    border-radius: 100%;
+}
+.swiper-container .swiper-pagination>.swiper-bullet.selected {
+    opacity: 1;
+}
+/* swiper-pagination end

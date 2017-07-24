@@ -6,10 +6,10 @@ const uri = 'http://localhost:' + port;
 
 const app = express();
 
-app.use('/', express.static('src'));
+app.use('/', express.static('../client'));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname + '/index.html'));
+    res.sendFile(path.join(__dirname + '../client/index.html'));
 });
 
 app.get('/banner', (req, res) => {
@@ -29,7 +29,7 @@ app.get('/banner', (req, res) => {
       parsedData = parsedData.slice(0, count);
     }
 
-    res.writeHead(200, {'Content-Type': 'application/json' });
+    res.writeHead(200, {'Content-Type': 'application/json'});
     res.write(JSON.stringify(parsedData));
     res.end();
   });
