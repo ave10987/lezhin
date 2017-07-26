@@ -3,9 +3,14 @@
 		this.slides = [];
 		this.options = {};
 		this.screenMode = '';
+		this.isMobileDevice = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase()));
 
 		this.eSlidesLoaded = new Event( this );
 		this.eScreenModeLoaded = new Event( this );
+	};
+
+	Model.prototype.getIsMobileDevice = function () {
+		return this.isMobileDevice;
 	};
 
 	Model.prototype.setScreenMode = function ( screenMode ) {

@@ -4,8 +4,7 @@
 			containerId: 'lezhin-swiper',
 			autoPlay: false,
 			infinity: true,
-			autoPlayDuration : 1000,
-			height: 400
+			autoPlayDuration : 3000
 		};
 
 		var model = new Model(),

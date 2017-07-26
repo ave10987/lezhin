@@ -31,8 +31,16 @@
 		this.touchEndX = 0;
 		this.containerHeight = 0;
 
+		if( !!this.autoPlayInterval ) {
+			window.clearInterval( this.autoPlayInterval );
+		} else {
+			this.autoPlayInterval = {};
+		}
+
 		this.$container.addClass( 'swiper-container' );
 		this.$container.append( this.$wrapper );
+
+		this.setContainerHeight();
 
 		this.drawSlides();
 
@@ -44,7 +52,6 @@
 			this.$navButton = this.createNavButton();
 			this.$navButton.css( { 'top': ( this.options.height / 2 ) - ( this.$navButton.height() / 2 ) } );
 		}
-		// this.$container.css( 'height', this.options.height );
 		this.setEvent();
 
 
@@ -70,9 +77,16 @@
 		this.initSwiper();
 	};
 
-	Swiper.prototype.setContainerHeight = function ( e ) {
-		e.data.containerHeight = e.data.containerHeight > $( this ).height() ? e.data.containerHeight : $( this ) .height();
-		e.data.$container.height( e.data.containerHeight );
+	Swiper.prototype.setContainerHeight = function () {
+		// mobile >  width : height = 1 : 1.075
+		// desktop >  width : height = 1 : 0.32
+		// www.lezhin.com banner 비율
+		if( this.screenMode === 'mobile' ) {
+			this.$container.height( ( $( window ).width() * 1.075 ) );
+		} else if ( this.screenMode === 'desktop' ) {
+			this.$container.height( ( $( window ).width() * 0.32 ) );
+		}
+
 	};
 
 	Swiper.prototype.drawSlides = function () {
@@ -80,7 +94,7 @@
 		var that = this,
 			$slider = $( '<div class="swiper-slider"></div>' ),
 			$link = $( '<a href=""></a>'),
-			$image = $( '<img src="" alt="">' ),
+			$image = $( '<img src="" alt="bannerSlide">' ),
 			slideNumber = 0,
 			slides = [];
 
@@ -91,6 +105,8 @@
 
 		// slide 생성
 		if( this.slideData.length === 1 ) {
+			$image.attr( 'src', this.slideData[ 0 ].image );
+			$link.attr( 'href', this.slideData[ 0 ].link );
 			$link.append( $image );
 			$slider.append( $link );
 			this.$wrapper.append( $slider );
@@ -100,9 +116,8 @@
 			for( i = 0; i < 3; i++ ) {
 				slideNumber = i === 0 ? this.slideData.length -1 : i - 1;
 				$slider = $( '<div class="swiper-slider" data-order="' + i + '" data-transform="' + ( ( i - 1 ) * 100 ) + '"></div>' );
-				$link = $( '<a href="' + this.slideData[slideNumber].link + '"></a>');
-				$image = $( '<img src="' + this.slideData[slideNumber].image + '" alt="">' );
-				$image.one( 'load', that, that.setContainerHeight );
+				$link = $( '<a href="' + this.slideData[ slideNumber ].link + '"></a>');
+				$image = $( '<img src="' + this.slideData[ slideNumber ].image + '" alt="bannerSlide">' );
 				$slider.css( {
 					'transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
 					'-webkit-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
@@ -151,10 +166,8 @@
 	Swiper.prototype.setAutoPlay = function () {
 		var that = this;
 
-		if( this.options.autoPlay ) {
-			setInterval( function () {
-				that.moveNext();
-			}, this.options.autoPlayDuration );
+		if( that.options.autoPlay ) {
+			that.autoPlayInterval = setInterval( that.moveNext.bind( that ), this.options.autoPlayDuration );
 		}
 	};
 
@@ -166,12 +179,16 @@
 	};
 
 	Swiper.prototype.setEvent = function () {
-		var that = this;
+		var that = this,
+			touchstart = that.model.getIsMobileDevice() ? 'touchstart' : 'mousedown';
 
-		that.$container.off( 'mousedown touchstart' ).on( 'mousedown touchstart', that, that.touchStartHandler);
-		// that.$container.off( 'click', 'a' ).on( 'click touchend', 'a', that, that.preventLink );
+		that.$container.off( touchstart ).on( touchstart, that, that.touchStartHandler);
 
-		$( window ).off( 'resize' ).on ( 'resize', function ( e ) {
+		// pc환경에서 swipe 수행시 a tag가 click되는 것을 방지
+		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink );
+
+		$( window ).off( 'resize' ).on ( 'resize orientationchange', function ( e ) {
+			that.setContainerHeight();
 			if( $( window ).width() > 768 && that.screenMode === 'mobile' ) {
 				that.eScreenModeChanged.emit( {
 					screenMode: 'desktop'
@@ -182,14 +199,9 @@
 				});
 			}
 		});
-
-		$( window ).off( 'orientationchange' ).on( 'orientationchange', function ( e ) {
-			console.log( 'orientationchange' );
-		});
 	};
 
 	Swiper.prototype.preventLink = function ( e ) {
-		console.log( 'preventLink' );
 		if( e.data.sliding ) {
 			e.preventDefault();
 			return;
@@ -198,7 +210,18 @@
 
 	Swiper.prototype.touchStartHandler = function ( e ) {
 		var that = e.data,
-			touch = ( e.type === 'mousedown' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+			touch = ( e.type === 'mousedown' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0],
+			touchmove = that.model.getIsMobileDevice() ? 'touchmove' : 'mousemove',
+			touchend = that.model.getIsMobileDevice() ? 'touchend' : 'mouseup';
+
+		// mouse event의 경우 drag이벤트와 중복되어 이미지가 선택되는 것을 방지
+		if( e.type === 'mousedown' ) {
+			e.preventDefault();
+		}
+
+		if( that.options.autoPlay && !!that.autoPlayInterval ) {
+			window.clearInterval( that.autoPlayInterval );
+		}
 
 		that.sliding = false;
 
@@ -209,8 +232,8 @@
 			'transition-duration': '0s'
 		});
 
-		that.$container.off( 'mousemove touchmove' ).on( 'mousemove touchmove', that, that.touchMoveHandler);
-		that.$container.off( 'mouseup touchend' ).on( 'mouseup touchend', that, that.touchEndHandler);
+		that.$container.off( touchmove ).on( touchmove, that, that.touchMoveHandler);
+		that.$container.off( touchend ).on( touchend, that, that.touchEndHandler);
 	};
 
 	Swiper.prototype.touchMoveHandler = function ( e ) {
@@ -226,7 +249,7 @@
 		that.sliding = true;
 
 		if( that.touchStartX !== null ) {
-			if( ( ( !that.options.infinity && that.currentIndex === 0 ) && that.touchStartX - touch.pageX < 0 ) ||
+			if( that.slideData.length < 2|| ( ( !that.options.infinity && that.currentIndex === 0 ) && that.touchStartX - touch.pageX < 0 ) ||
 				( ( !that.options.infinity && that.currentIndex === that.slideData.length - 1 ) && that.touchStartX - touch.pageX > 0 ) ) {
 				return;
 			} else {
@@ -243,30 +266,36 @@
 		}
 	};
 
+
 	Swiper.prototype.touchEndHandler = function ( e ) {
-		// e.preventDefault();
 		var that = e.data,
 			touch = ( e.type === 'mouseup' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+
+		if( that.sliding ) {
+			e.preventDefault();
+		}
 
 		that.touchEndX = touch.pageX;
 		that.$wrapper.css( {
 			'transition-timing-function': 'ease-out',
-			'transition-duration': '.5s'
+			'transition-duration': '.3s'
 		});
 
-		if( that.touchStartX - that.touchEndX > 50 ) {
-			// swipe right to left
-			that.moveNext();
-		} else if ( that.touchStartX - that.touchEndX < -50 ) {
-			// swipe left to right
-			that.movePrev();
-		} else {
-			that.$wrapper.css( {
-				'transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-webkit-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-ms-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-o-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
-			});
+		if( that.slideData.length > 2 ) {
+			if( that.touchStartX - that.touchEndX > 50 ) {
+				// swipe right to left
+				that.moveNext();
+			} else if ( that.touchStartX - that.touchEndX < -50 ) {
+				// swipe left to right
+				that.movePrev();
+			} else {
+				that.$wrapper.css( {
+					'transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+					'-webkit-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+					'-ms-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+					'-o-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
+				});
+			}
 		}
 
 		if( !that.sliding ) {
@@ -274,7 +303,6 @@
 			if ( $target.hasClass( 'swiper-bullet') ) {
 				// pagination event fire
 				that.moveTo( $target.index() );
-				console.log( 'moveTo' );
 			} else if ( $target.hasClass( 'next' ) || $target.hasClass( 'prev' )) {
 				// next, prev event fire
 				$target.hasClass( 'next' ) ? that.moveNext() : that.movePrev();
@@ -282,6 +310,10 @@
 		}
 
 		that.touchStartX = null;
+
+		if( that.options.autoPlay ) {
+			that.setAutoPlay();
+		}
 	};
 
 	Swiper.prototype.moveNext = function () {
@@ -361,7 +393,7 @@
 	Swiper.prototype.moveTo = function ( index ) {
 		var that = this,
 			gap = Math.abs( index - that.currentIndex ),
-			duration = ( 500 / gap ),
+			duration = ( 300 / gap ),
 			direction = index - that.currentIndex < 0 ? 'rl' : 'lr',
 			i = 0;
 
@@ -378,7 +410,7 @@
 		setTimeout( function () {
 			that.$wrapper.css( {
 				'transition-timing-function': 'ease',
-				'transition-duration': '.5s'
+				'transition-duration': '.3s'
 			});
 		}, i * duration );
 	};
