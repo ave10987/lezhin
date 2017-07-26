@@ -169,20 +169,7 @@
 		var that = this;
 
 		that.$container.off( 'mousedown touchstart' ).on( 'mousedown touchstart', that, that.touchStartHandler);
-
-		that.$container.off( 'click' ).on( 'click', function ( e ) {
-			var $target = $( e.target );
-
-			if ( $target.hasClass( 'swiper-bullet') ) {
-				// pagination event fire
-				that.moveTo( $target.index() );
-			} else if ( $target.hasClass( 'next' ) || $target.hasClass( 'prev' )) {
-				// next, prev event fire
-				$target.hasClass( 'next' ) ? that.moveNext() : that.movePrev();
-			}
-		});
-
-		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink);
+		// that.$container.off( 'click', 'a' ).on( 'click touchend', 'a', that, that.preventLink );
 
 		$( window ).off( 'resize' ).on ( 'resize', function ( e ) {
 			if( $( window ).width() > 768 && that.screenMode === 'mobile' ) {
@@ -195,9 +182,14 @@
 				});
 			}
 		});
+
+		$( window ).off( 'orientationchange' ).on( 'orientationchange', function ( e ) {
+			console.log( 'orientationchange' );
+		});
 	};
 
 	Swiper.prototype.preventLink = function ( e ) {
+		console.log( 'preventLink' );
 		if( e.data.sliding ) {
 			e.preventDefault();
 			return;
@@ -205,9 +197,6 @@
 	};
 
 	Swiper.prototype.touchStartHandler = function ( e ) {
-		e.preventDefault();
-		e.stopPropagation();
-
 		var that = e.data,
 			touch = ( e.type === 'mousedown' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 
@@ -219,8 +208,6 @@
 			'transition-timing-function': 'initial',
 			'transition-duration': '0s'
 		});
-
-		that.$container.find( 'a' ).off( 'click' );
 
 		that.$container.off( 'mousemove touchmove' ).on( 'mousemove touchmove', that, that.touchMoveHandler);
 		that.$container.off( 'mouseup touchend' ).on( 'mouseup touchend', that, that.touchEndHandler);
@@ -257,13 +244,11 @@
 	};
 
 	Swiper.prototype.touchEndHandler = function ( e ) {
-		e.preventDefault();
-		e.stopPropagation();
-
+		// e.preventDefault();
 		var that = e.data,
 			touch = ( e.type === 'mouseup' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 
-		that.touchEndX = e.pageX;
+		that.touchEndX = touch.pageX;
 		that.$wrapper.css( {
 			'transition-timing-function': 'ease-out',
 			'transition-duration': '.5s'
@@ -283,7 +268,20 @@
 				'-o-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
 			});
 		}
-		e.data.touchStartX = null;
+
+		if( !that.sliding ) {
+			var $target = $( e.target );
+			if ( $target.hasClass( 'swiper-bullet') ) {
+				// pagination event fire
+				that.moveTo( $target.index() );
+				console.log( 'moveTo' );
+			} else if ( $target.hasClass( 'next' ) || $target.hasClass( 'prev' )) {
+				// next, prev event fire
+				$target.hasClass( 'next' ) ? that.moveNext() : that.movePrev();
+			}
+		}
+
+		that.touchStartX = null;
 	};
 
 	Swiper.prototype.moveNext = function () {
@@ -373,8 +371,8 @@
 		});
 		for( i = 0; i < gap; i++ ) {
 			setTimeout( function () {
-				that[ direction === 'lr' ? 'moveNext' : 'movePrev']();
-				}, i * duration );
+				that[ direction === 'lr' ? 'moveNext' : 'movePrev' ]();
+			}, i * duration );
 		}
 
 		setTimeout( function () {

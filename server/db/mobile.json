@@ -1,13 +1,13 @@
 [{
-	"image": "https://dummyimage.com/600x400/98b3d6/000000&text=Mobile1",
+	"image": "https://dummyimage.com/300x400/98b3d6/000000&text=Mobile1",
 	"link": "http://naver.com"
 }, {
-	"image": "https://dummyimage.com/600x400/98b3d6/000000&text=Mobile2",
+	"image": "https://dummyimage.com/300x400/98b3d6/000000&text=Mobile2",
 	"link": "http://www.daum.net"
 }, {
-	"image": "https://dummyimage.com/600x400/98b3d6/000000&text=Mobile3",
+	"image": "https://dummyimage.com/300x400/98b3d6/000000&text=Mobile3",
 	"link": "http://www.nate.com"
 }, {
- 	"image": "https://dummyimage.com/600x400/98b3d6/000000&text=Mobile4",
+ 	"image": "https://dummyimage.com/300x400/98b3d6/000000&text=Mobile4",
  	"link": "http://www.github.com"
 }]
