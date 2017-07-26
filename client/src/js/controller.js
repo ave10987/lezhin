@@ -34,9 +34,8 @@
 	};
 
 	Controller.prototype.screenModeChanged = function ( sender, data ) {
-		console.log( 'screenModeChange' );
-		this.getBannerData( data.screenMode );
 		this.model.setScreenMode( data.screenMode );
+		this.getBannerData( data.screenMode );
 	};
 
 	$( document ).ready( function () {

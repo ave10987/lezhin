@@ -15,8 +15,9 @@
 
 		// domObject
 		this.$container = $( '#' + this.options.containerId );
-		// this.$container.empty();
-		this.$wrapper = {};
+		this.$container.empty();
+
+		this.$wrapper = $( '<div class="swiper-wrapper" data-transform="0"></div>' );
 		this.$currentSlideElement = {};
 		this.$prevSlideElement = {};
 		this.$nextSlideElement = {};
@@ -24,33 +25,16 @@
 		this.$navButton = {};
 
 		// swiperData
-		// this.screenMode = '';
-		// this.slideData = [];
 		this.currentIndex = 0;
 		this.wrapperIndex = 0;
-		this.touchStartX = 0;
+		this.touchStartX = null;
 		this.touchEndX = 0;
+		this.containerHeight = 0;
 
-		// console.log( this.$wrapper )
-		this.$wrapper = $( '<div class="swiper-wrapper" data-transform="0"></div>' );
 		this.$container.addClass( 'swiper-container' );
 		this.$container.append( this.$wrapper );
 
-		this.setEvent();
-	};
-
-	Swiper.prototype.screenModeLoaded = function () {
-		this.screenMode = this.model.getScreenMode();
-	};
-
-	Swiper.prototype.slidesLoaded = function () {
-
-		this.initSwiper();
-
-		this.slideData = this.model.getSlides();
-		// this.options = this.model.getOptions();
-
-		this.drawSlides( this.slideData, this.options );
+		this.drawSlides();
 
 		// pagination 생성
 		this.$pagination = this.createPagination( this.slideData.length );
@@ -60,12 +44,41 @@
 			this.$navButton = this.createNavButton();
 			this.$navButton.css( { 'top': ( this.options.height / 2 ) - ( this.$navButton.height() / 2 ) } );
 		}
-		this.$container.css( 'height', this.options.height );
+		// this.$container.css( 'height', this.options.height );
+		this.setEvent();
+
+
+		// TBD : known issue : window resize 발생 후 slide를 새로 생성하는데, touchMoveHandler에서 touchStartX값이 늦게 전달됨
+
+		// this.$container.css( 'display', 'none');
+		// var that = this;
+		// setTimeout( function () {
+		// 	that.$container.css( 'display', 'block');
+		// 	that.setEvent();
+		// }, 800 );
+
+	};
+
+	Swiper.prototype.screenModeLoaded = function () {
+		this.screenMode = this.model.getScreenMode();
+	};
+
+	Swiper.prototype.slidesLoaded = function () {
+
+		this.slideData = this.model.getSlides();
+
+		this.initSwiper();
+	};
+
+	Swiper.prototype.setContainerHeight = function ( e ) {
+		e.data.containerHeight = e.data.containerHeight > $( this ).height() ? e.data.containerHeight : $( this ) .height();
+		e.data.$container.height( e.data.containerHeight );
 	};
 
 	Swiper.prototype.drawSlides = function () {
 
-		var $slider = $( '<div class="swiper-slider"></div>' ),
+		var that = this,
+			$slider = $( '<div class="swiper-slider"></div>' ),
 			$link = $( '<a href=""></a>'),
 			$image = $( '<img src="" alt="">' ),
 			slideNumber = 0,
@@ -78,7 +91,6 @@
 
 		// slide 생성
 		if( this.slideData.length === 1 ) {
-			$image.css( 'height', this.options.height );
 			$link.append( $image );
 			$slider.append( $link );
 			this.$wrapper.append( $slider );
@@ -90,8 +102,7 @@
 				$slider = $( '<div class="swiper-slider" data-order="' + i + '" data-transform="' + ( ( i - 1 ) * 100 ) + '"></div>' );
 				$link = $( '<a href="' + this.slideData[slideNumber].link + '"></a>');
 				$image = $( '<img src="' + this.slideData[slideNumber].image + '" alt="">' );
-				$image.css( 'height', this.options.height );
-
+				$image.one( 'load', that, that.setContainerHeight );
 				$slider.css( {
 					'transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
 					'-webkit-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
@@ -157,6 +168,8 @@
 	Swiper.prototype.setEvent = function () {
 		var that = this;
 
+		that.$container.off( 'mousedown touchstart' ).on( 'mousedown touchstart', that, that.touchStartHandler);
+
 		that.$container.off( 'click' ).on( 'click', function ( e ) {
 			var $target = $( e.target );
 
@@ -169,9 +182,8 @@
 			}
 		});
 
-		that.$container.off( 'click' ).on( 'mousedown touchstart', that, that.touchStartHandler);
-		that.$container.off( 'click' ).on( 'mousemove touchmove', that, that.touchMoveHandler);
-		that.$container.off( 'click' ).on( 'mouseup touchend', that, that.touchEndHandler);
+		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink);
+
 		$( window ).off( 'resize' ).on ( 'resize', function ( e ) {
 			if( $( window ).width() > 768 && that.screenMode === 'mobile' ) {
 				that.eScreenModeChanged.emit( {
@@ -185,44 +197,55 @@
 		});
 	};
 
+	Swiper.prototype.preventLink = function ( e ) {
+		if( e.data.sliding ) {
+			e.preventDefault();
+			return;
+		}
+	};
+
 	Swiper.prototype.touchStartHandler = function ( e ) {
 		e.preventDefault();
 		e.stopPropagation();
 
-		var touch = ( e.type === 'mousedown' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+		var that = e.data,
+			touch = ( e.type === 'mousedown' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 
-		e.data.$container.find( 'a' ).off( 'click' );
+		that.sliding = false;
 
-		this.touchStartX = touch.pageX;
+		that.touchStartX = touch.pageX;
 
-		e.data.$wrapper.css( {
+		that.$wrapper.css( {
 			'transition-timing-function': 'initial',
 			'transition-duration': '0s'
 		});
+
+		that.$container.find( 'a' ).off( 'click' );
+
+		that.$container.off( 'mousemove touchmove' ).on( 'mousemove touchmove', that, that.touchMoveHandler);
+		that.$container.off( 'mouseup touchend' ).on( 'mouseup touchend', that, that.touchEndHandler);
 	};
 
 	Swiper.prototype.touchMoveHandler = function ( e ) {
 		e.preventDefault();
 		e.stopPropagation();
 
-		var touch = ( e.type === 'mousemove' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0],
+		var that = e.data,
+			touch = ( e.type === 'mousemove' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0],
 			$wrapper = {},
 			wrapperMoveX = 0,
 			wrapperTransform = 0;
 
-		// swipe 후 touchend event에서 click event 발생 방지
-		e.data.$container.find( 'a' ).on( 'click', function ( e ) {
-			e.preventDefault();
-		});
+		that.sliding = true;
 
-		if( this.touchStartX !== null ) {
-			if( ( ( !e.data.infinity && e.data.currentIndex === 0 ) && this.touchStartX - touch.pageX < 0 ) ||
-				( ( !e.data.infinity && e.data.currentIndex === e.data.slideData.length - 1 ) && this.touchStartX - touch.pageX > 0 ) ) {
+		if( that.touchStartX !== null ) {
+			if( ( ( !that.options.infinity && that.currentIndex === 0 ) && that.touchStartX - touch.pageX < 0 ) ||
+				( ( !that.options.infinity && that.currentIndex === that.slideData.length - 1 ) && that.touchStartX - touch.pageX > 0 ) ) {
 				return;
 			} else {
-				$wrapper = e.data.$wrapper;
+				$wrapper = that.$wrapper;
 				wrapperTransform = parseInt( $wrapper.attr( 'data-transform' ), 10 );
-				wrapperMoveX = ( ( ( touch.pageX - this.touchStartX ) * 100 / $wrapper.width() ) + wrapperTransform );
+				wrapperMoveX = ( ( ( touch.pageX - that.touchStartX ) * 100 / $wrapper.width() ) + wrapperTransform );
 				$wrapper.css( {
 					'transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )',
 					'-webkit-transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )',
@@ -237,29 +260,30 @@
 		e.preventDefault();
 		e.stopPropagation();
 
-		var touch = ( e.type === 'mouseup' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+		var that = e.data,
+			touch = ( e.type === 'mouseup' ) ? e : e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 
-		this.touchEndX = e.pageX;
-		e.data.$wrapper.css( {
+		that.touchEndX = e.pageX;
+		that.$wrapper.css( {
 			'transition-timing-function': 'ease-out',
 			'transition-duration': '.5s'
 		});
 
-		if( this.touchStartX - this.touchEndX > 100 ) {
+		if( that.touchStartX - that.touchEndX > 50 ) {
 			// swipe right to left
-			e.data.moveNext();
-		} else if ( this.touchStartX - this.touchEndX < -100 ) {
+			that.moveNext();
+		} else if ( that.touchStartX - that.touchEndX < -50 ) {
 			// swipe left to right
-			e.data.movePrev();
+			that.movePrev();
 		} else {
-			e.data.$wrapper.css( {
-				'transform': 'translate3d( ' + e.data.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-webkit-transform': 'translate3d( ' + e.data.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-ms-transform': 'translate3d( ' + e.data.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-				'-o-transform': 'translate3d( ' + e.data.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
+			that.$wrapper.css( {
+				'transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+				'-webkit-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+				'-ms-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
+				'-o-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
 			});
 		}
-		this.touchStartX = null;
+		e.data.touchStartX = null;
 	};
 
 	Swiper.prototype.moveNext = function () {
