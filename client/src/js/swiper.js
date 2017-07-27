@@ -160,7 +160,7 @@
 								' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].image + '"' +
 								' data-mobile="' + this.model.getMobileSlides()[ slideNumber ].image + '">' );
 
-				$slider.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( 100 * ( i - 1 ) ) + '%, 0, 0 )' ) );
+				$slider.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( 100 * ( i - 1 ) ) + '%, 0, 0 )' ) );
 
 				$link.append( $image );
 				$slider.append( $link );
@@ -327,7 +327,7 @@
 				$wrapper = that.$wrapper;
 				wrapperTransform = parseInt( $wrapper.attr( 'data-transform' ), 10 );
 				wrapperMoveX = ( ( ( touch.pageX - that.touchStartX ) * 100 / $wrapper.width() ) + wrapperTransform );
-				$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + wrapperMoveX + '%, 0, 0 )' ) );
+				$wrapper.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + wrapperMoveX + '%, 0, 0 )' ) );
 			}
 		}
 	};
@@ -367,7 +367,7 @@
 			} else {
 
 				// swipe동작으로 인식하기에 충분하지 않은 거리를 움직였다면 slide 원래 위치로 복구
-				that.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )' ) );
+				that.$wrapper.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )' ) );
 			}
 		}
 
@@ -408,12 +408,12 @@
 		if( this.options.infinity || this.currentIndex !== this.slideData.length - 1 ) {
 
 			// prevSlide 이동
-			this.$prevSlideElement.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + moveX + '%, 0, 0 )' ) );
+			this.$prevSlideElement.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + moveX + '%, 0, 0 )' ) );
 			this.$prevSlideElement.attr( 'data-transform', moveX );
 
 			// index 변경
 			this.currentIndex = ++this.currentIndex % this.slideData.length;
-			nextIndex = ( this.currentIndex + 1 ) % this.slideData.length
+			nextIndex = ( this.currentIndex + 1 ) % this.slideData.length;
 			this.wrapperIndex++;
 
 			// prev, current, next element변경
@@ -438,7 +438,7 @@
 		if( this.options.infinity || this.currentIndex !== 0 ) {
 
 			// nextSlide 이동
-			this.$nextSlideElement.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + moveX + '%, 0, 0 )' ) );
+			this.$nextSlideElement.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + moveX + '%, 0, 0 )' ) );
 			this.$nextSlideElement.attr( 'data-transform', moveX );
 
 			// index 변경
@@ -478,7 +478,7 @@
 
 		// wrapper translate animation
 		this.$wrapper.attr( 'data-transform', this.wrapperIndex * -100 );
-		this.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ) );
+		this.$wrapper.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ) );
 	};
 
 	// 특정 index로 이동하는 경우

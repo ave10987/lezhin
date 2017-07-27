@@ -21,5 +21,5 @@ var Utils = (function () {
 	return {
 		sendAjax: sendAjax,
 		setVendorPrefix: setVendorPrefix
-	}
+	};
 })();
