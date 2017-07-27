@@ -23,6 +23,7 @@
 	Controller.prototype.getBannerData = function ( count ) {
 		var that = this;
 
+		// mobile과 desktop 배너 정보를 모두 받은 후 model에 설정
 		$.when( that.getMobileBanner(), that.getDesktopBaner() ).done( function ( mobileBannerData, desktopBannerData ) {
 			that.model.setMobileSlides( mobileBannerData[ 0 ] );
 			that.model.setDesktopSlides( desktopBannerData[ 0 ] );
