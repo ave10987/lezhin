@@ -17,6 +17,15 @@
 		this.model.eScreenModeChanged.attach( this.screenModeChanged.bind( this ) );
 	};
 
+	Swiper.prototype.screenModeChanged = function () {
+		this.screenMode = this.model.getScreenMode();
+	};
+
+	Swiper.prototype.slidesLoaded = function () {
+		this.slideData = this.model.getSlides();
+		this.initSwiper();
+	};
+
 	Swiper.prototype.initSwiper = function () {
 
 		// domObject
@@ -37,17 +46,19 @@
 		this.touchEndX = 0;
 		this.containerHeight = 0;
 
+		// swiper 초기화 단계에서 autoPlay를 위한 interval이 존재하면 clearInterval
 		if( !!this.autoPlayInterval ) {
 			window.clearInterval( this.autoPlayInterval );
 		} else {
 			this.autoPlayInterval = {};
 		}
 
+		// set swiper container
 		this.$container.addClass( 'swiper-container' );
 		this.$container.append( this.$wrapper );
-
 		this.setContainerHeight();
 
+		// slide 생성
 		this.drawSlides();
 
 		// pagination 생성
@@ -58,29 +69,12 @@
 			this.$navButton = this.createNavButton();
 			this.$navButton.css( { 'top': ( this.options.height / 2 ) - ( this.$navButton.height() / 2 ) } );
 		}
+
+		// swiper event 설정
 		this.setEvent();
-
-
-		// TBD : known issue : window resize 발생 후 slide를 새로 생성하는데, touchMoveHandler에서 touchStartX값이 늦게 전달됨
-
-		// this.$container.css( 'display', 'none');
-		// var that = this;
-		// setTimeout( function () {
-		// 	that.$container.css( 'display', 'block');
-		// 	that.setEvent();
-		// }, 800 );
-
 	};
 
-	Swiper.prototype.screenModeChanged = function () {
-		this.screenMode = this.model.getScreenMode();
-	};
-
-	Swiper.prototype.slidesLoaded = function () {
-		this.slideData = this.model.getSlides();
-		this.initSwiper();
-	};
-
+	// screenMode가 변경된 경우 slide 업데이트
 	Swiper.prototype.slidesUpdate = function () {
 		var that = this;
 
@@ -98,6 +92,7 @@
 		});
 	};
 
+	// swiper container height 설정
 	Swiper.prototype.setContainerHeight = function () {
 		// mobile >  width : height = 1 : 1.075
 		// desktop >  width : height = 1 : 0.32
@@ -152,12 +147,7 @@
 								' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].image + '"' +
 								' data-mobile="' + this.model.getMobileSlides()[ slideNumber ].image + '">' );
 
-				$slider.css( {
-					'transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
-					'-webkit-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
-					'-ms-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
-					'-o-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )'
-				});
+				$slider.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( 100 * ( i - 1 ) ) + '%, 0, 0 )' ) );
 
 				$link.append( $image );
 				$slider.append( $link );
@@ -213,10 +203,11 @@
 	};
 
 	Swiper.prototype.setEvent = function () {
+		console.log( 'orientationChange' );
 		var that = this,
 			touchstart = that.model.getIsMobileDevice() ? 'touchstart' : 'mousedown';
 
-		that.$container.off( touchstart ).on( touchstart, that, that.touchStartHandler);
+		that.$container.off( 'touchstart mousedown' ).on( touchstart, that, that.touchStartHandler);
 
 		// pc환경에서 swipe 수행시 a tag가 click되는 것을 방지
 		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink );
@@ -270,8 +261,8 @@
 			'transition-duration': '0s'
 		});
 
-		that.$container.off( touchmove ).on( touchmove, that, that.touchMoveHandler);
-		that.$container.off( touchend ).on( touchend, that, that.touchEndHandler);
+		that.$container.off( 'touchmove mousemove' ).on( touchmove, that, that.touchMoveHandler);
+		that.$container.off( 'touchend mouseup' ).on( touchend, that, that.touchEndHandler);
 	};
 
 	Swiper.prototype.touchMoveHandler = function ( e ) {
@@ -294,12 +285,7 @@
 				$wrapper = that.$wrapper;
 				wrapperTransform = parseInt( $wrapper.attr( 'data-transform' ), 10 );
 				wrapperMoveX = ( ( ( touch.pageX - that.touchStartX ) * 100 / $wrapper.width() ) + wrapperTransform );
-				$wrapper.css( {
-					'transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )',
-					'-webkit-transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )',
-					'-ms-transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )',
-					'-o-transform': 'translate3d( ' + wrapperMoveX + '%, 0, 0 )'
-				});
+				$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + wrapperMoveX + '%, 0, 0 )' ) );
 			}
 		}
 	};
@@ -327,15 +313,10 @@
 				// swipe left to right
 				that.movePrev();
 			} else {
-				that.$wrapper.css( {
-					'transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-					'-webkit-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-					'-ms-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )',
-					'-o-transform': 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )'
-				});
+				that.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )' ) );
 			}
 		}
-
+		console.log( 'touchEnd' );
 		if( !that.sliding ) {
 			var $target = $( e.target );
 			if ( $target.hasClass( 'swiper-bullet') ) {
@@ -360,7 +341,6 @@
 			nextIndex = 0;
 
 		if( this.options.infinity || this.currentIndex !== this.slideData.length - 1 ) {
-
 			this.$prevSlideElement.css( {
 				'transform': 'translate3d( ' + moveX + '%, 0, 0 )',
 				'-webkit-transform': 'translate3d( ' + moveX + '%, 0, 0 )',
@@ -392,12 +372,7 @@
 			this.setPagination();
 
 			this.$wrapper.attr( 'data-transform', this.wrapperIndex * -100 );
-			this.$wrapper.css( {
-				'transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ,
-				'-webkit-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ,
-				'-ms-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ,
-				'-o-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )'
-			});
+			this.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ) );
 		}
 	};
 
@@ -407,12 +382,7 @@
 			moveX = parseInt( this.$nextSlideElement.attr('data-transform'), 10 ) - 300;
 
 		if( this.options.infinity || this.currentIndex !== 0 ) {
-			this.$nextSlideElement.css( {
-				'transform': 'translate3d( ' + moveX + '%, 0, 0 )',
-				'-webkit-transform': 'translate3d( ' + moveX + '%, 0, 0 )',
-				'-ms-transform': 'translate3d( ' + moveX + '%, 0, 0 )',
-				'-o-transform': 'translate3d( ' + moveX + '%, 0, 0 )'
-			});
+			this.$nextSlideElement.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + moveX + '%, 0, 0 )' ) );
 			this.$nextSlideElement.attr( 'data-transform', moveX );
 
 			this.currentIndex = ( this.currentIndex - 1 < 0 ) ? --this.currentIndex + this.slideData.length : this.currentIndex - 1;
@@ -438,12 +408,7 @@
 			this.setPagination();
 
 			this.$wrapper.attr( 'data-transform', this.wrapperIndex * -100 );
-			this.$wrapper.css( {
-				'transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )',
-				'-webkit-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )',
-				'-ms-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )',
-				'-o-transform': 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )'
-			});
+			this.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( this.wrapperIndex * -100 ) + '%, 0, 0 )' ) );
 		}
 	};
 
