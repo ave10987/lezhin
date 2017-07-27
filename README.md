@@ -1,5 +1,5 @@
 # lezhin
 
-#How To Use
+# How To Use
   npm install
   node server/main.js
