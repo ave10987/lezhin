@@ -2,13 +2,19 @@
 	window.Swiper = function ( model, options ) {
 
 		this.model = model;
+
+		options.autoPlay = ( options && options.autoPlay ) ? options.autoPlay : false;
+		options.infinity = ( options && options.infinity ) ? options.infinity : false;
+		options.autoPlayDuration = ( options && options.autoPlayDuration ) ? options.autoPlayDuration : 3000;
 		this.options = options;
 
 		this.eScreenModeChanged = new Event( this );
+		this.eOrientationChanged = new Event( this );
 
 		// API를 통해 banner 정보를 받아온 후 slidesLoaded handler수행
 		this.model.eSlidesLoaded.attach( this.slidesLoaded.bind( this ) );
-		this.model.eScreenModeLoaded.attach( this.screenModeLoaded.bind( this ) );
+		this.model.eSlidesUpdate.attach( this.slidesUpdate.bind( this ) );
+		this.model.eScreenModeChanged.attach( this.screenModeChanged.bind( this ) );
 	};
 
 	Swiper.prototype.initSwiper = function () {
@@ -66,15 +72,30 @@
 
 	};
 
-	Swiper.prototype.screenModeLoaded = function () {
+	Swiper.prototype.screenModeChanged = function () {
 		this.screenMode = this.model.getScreenMode();
 	};
 
 	Swiper.prototype.slidesLoaded = function () {
+		this.slideData = this.model.getSlides();
+		this.initSwiper();
+	};
+
+	Swiper.prototype.slidesUpdate = function () {
+		var that = this;
 
 		this.slideData = this.model.getSlides();
 
-		this.initSwiper();
+		this.$wrapper.find( '.swiper-slider' ).each( function ( i, v ) {
+			var $image = $( v ).find ( 'img' ),
+				$link = $( v ).find ( 'a ' );
+			$image.attr( {
+				'src': ( that.screenMode === 'mobile' ) ? $image.attr( 'data-mobile' ) : $image.attr( 'data-desktop' )
+			});
+			$link.attr( {
+				'href': ( that.screenMode === 'mobile' ) ? $link.attr( 'data-mobile' ) : $link.attr( 'data-desktop' )
+			});
+		});
 	};
 
 	Swiper.prototype.setContainerHeight = function () {
@@ -105,8 +126,16 @@
 
 		// slide 생성
 		if( this.slideData.length === 1 ) {
-			$image.attr( 'src', this.slideData[ 0 ].image );
-			$link.attr( 'href', this.slideData[ 0 ].link );
+			$image.attr( {
+				'src': this.slideData[ 0 ].image,
+				'data-desktop': this.model.getDesktopSlides()[ 0 ].image,
+				'data-mobile': this.model.getMobileSlides()[ 0 ].image
+			});
+			$link.attr( {
+				'href': this.slideData[ 0 ].link,
+				'data-desktop': this.getDesktopSlides()[ 0 ].link,
+				'data-mobile': this.getMobileSlides()[ 0 ].link
+			});
 			$link.append( $image );
 			$slider.append( $link );
 			this.$wrapper.append( $slider );
@@ -116,8 +145,13 @@
 			for( i = 0; i < 3; i++ ) {
 				slideNumber = i === 0 ? this.slideData.length -1 : i - 1;
 				$slider = $( '<div class="swiper-slider" data-order="' + i + '" data-transform="' + ( ( i - 1 ) * 100 ) + '"></div>' );
-				$link = $( '<a href="' + this.slideData[ slideNumber ].link + '"></a>');
-				$image = $( '<img src="' + this.slideData[ slideNumber ].image + '" alt="bannerSlide">' );
+				$link = $( '<a href="' + this.slideData[ slideNumber ].link + '"' +
+							' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].link + '"' +
+							' data-mobile="' + this.model.getMobileSlides()[ slideNumber ].link + '"></a>');
+				$image = $( '<img src="' + this.slideData[ slideNumber ].image + '" alt="bannerSlide"' +
+								' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].image + '"' +
+								' data-mobile="' + this.model.getMobileSlides()[ slideNumber ].image + '">' );
+
 				$slider.css( {
 					'transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
 					'-webkit-transform': 'translate3d( ' + ( 100 * ( i -1 ) ) + '%, 0, 0 )',
@@ -187,7 +221,11 @@
 		// pc환경에서 swipe 수행시 a tag가 click되는 것을 방지
 		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink );
 
-		$( window ).off( 'resize' ).on ( 'resize orientationchange', function ( e ) {
+		$( window ).off( 'resize orientationchange' ).on ( 'resize orientationchange', function ( e ) {
+			if( e.type === 'orientationchange' ) {
+				that.eOrientationChanged.emit();
+				that.setEvent();
+			}
 			that.setContainerHeight();
 			if( $( window ).width() > 768 && that.screenMode === 'mobile' ) {
 				that.eScreenModeChanged.emit( {
@@ -318,7 +356,8 @@
 
 	Swiper.prototype.moveNext = function () {
 		var $tempElement = {},
-			moveX = parseInt( this.$prevSlideElement.attr('data-transform'), 10 ) + 300;
+			moveX = parseInt( this.$prevSlideElement.attr( 'data-transform' ), 10 ) + 300,
+			nextIndex = 0;
 
 		if( this.options.infinity || this.currentIndex !== this.slideData.length - 1 ) {
 
@@ -331,14 +370,24 @@
 			this.$prevSlideElement.attr( 'data-transform', moveX );
 
 			this.currentIndex = ++this.currentIndex % this.slideData.length;
-				this.wrapperIndex++;
+			this.wrapperIndex++;
+
+			nextIndex = ( this.currentIndex + 1 ) % this.slideData.length
 
 			$tempElement = this.$prevSlideElement;
 			this.$prevSlideElement = this.$currentSlideElement;
 			this.$currentSlideElement = this.$nextSlideElement;
 			this.$nextSlideElement = $tempElement;
-			this.$nextSlideElement.find( 'img' ).attr( 'src', this.slideData[ ( this.currentIndex + 1 ) % this.slideData.length ].image );
-			this.$nextSlideElement.find( 'a' ).attr( 'href', this.slideData[ ( this.currentIndex + 1 ) % this.slideData.length ].link );
+			this.$nextSlideElement.find( 'img' ).attr( {
+				'src': this.slideData[ nextIndex ].image,
+				'data-desktop': this.model.getDesktopSlides()[ nextIndex ].image,
+				'data-mobile': this.model.getMobileSlides()[ nextIndex ].image
+			});
+			this.$nextSlideElement.find( 'a' ).attr( {
+				'href': this.slideData[ ( this.currentIndex + 1 ) % this.slideData.length ].link,
+				'data-desktop': this.model.getDesktopSlides()[ nextIndex ].link,
+				'data-mobile': this.model.getMobileSlides()[ nextIndex ].link
+			});
 
 			this.setPagination();
 
@@ -375,8 +424,16 @@
 			this.$prevSlideElement = $tempElement;
 
 			prevIndex = ( this.currentIndex - 1 < 0 ) ? this.currentIndex - 1 + this.slideData.length : this.currentIndex - 1;
-			this.$prevSlideElement.find( 'img' ).attr( 'src', this.slideData[ prevIndex ].image );
-			this.$prevSlideElement.find( 'a' ).attr( 'href', this.slideData[ prevIndex ].link );
+			this.$prevSlideElement.find( 'img' ).attr( {
+				'src': this.slideData[ prevIndex ].image,
+				'data-desktop': this.model.getDesktopSlides()[ prevIndex ].image,
+				'data-mobile': this.model.getMobileSlides()[ prevIndex ].image
+			});
+			this.$prevSlideElement.find( 'a' ).attr( {
+				'href': this.slideData[ prevIndex ].link,
+				'data-desktop': this.model.getDesktopSlides()[ prevIndex ].link,
+				'data-mobile': this.model.getMobileSlides()[ prevIndex ].link
+			});
 
 			this.setPagination();
 

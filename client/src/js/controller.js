@@ -11,31 +11,42 @@
 			count = 4;
 
 		this.view.eScreenModeChanged.attach( this.screenModeChanged.bind( this ) );
+		this.view.eOrientationChanged.attach( this.orientationChanged.bind( this ) );
 
 		// set screen mode
 		this.model.setScreenMode( screenMode );
 
 		// get banner data
-		this.getBannerData( screenMode, count );
+		this.getBannerData( count );
 	};
 
-	Controller.prototype.getBannerData = function ( screenMode, count ) {
+	Controller.prototype.getBannerData = function ( count ) {
 		var that = this;
 
-		Utils.sendAjax({
-			url: 'http://localhost:8888/banner?device=' + screenMode + '&count=' + count
-		}).done( function ( data ) {
+		$.when( that.getMobileBanner(), that.getDesktopBaner() ).done( function ( mobileBannerData, desktopBannerData ) {
+			that.model.setMobileSlides( mobileBannerData[ 0 ] );
+			that.model.setDesktopSlides( desktopBannerData[ 0 ] );
+			that.model.setSlides();
+		});
+	};
 
-			// set banner data
-			that.model.setSlides( data, that.view.options );
-		}).fail( function ( error ) {
-			console.log( error );
+	Controller.prototype.getMobileBanner = function ( count ) {
+		return Utils.sendAjax({
+			url: 'http://localhost:8888/banner?device=mobile&count=' + count
+		});
+	};
+
+	Controller.prototype.getDesktopBaner = function ( count ) {
+		return Utils.sendAjax({
+			url: 'http://localhost:8888/banner?device=desktop&count=' + count
 		});
 	};
 
 	Controller.prototype.screenModeChanged = function ( sender, data ) {
 		this.model.setScreenMode( data.screenMode );
-		this.getBannerData( data.screenMode );
+	};
+	Controller.prototype.orientationChanged = function () {
+		this.model.setIsMobileDevice();
 	};
 
 	$( document ).ready( function () {

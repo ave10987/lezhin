@@ -13,8 +13,8 @@
     width: 100%;
     height: 100%;
     transition-timing-function: ease-in;
-    transform: translateZ( 0 );
     transition-duration: .3s;
+    transform: translate3d( 0%, 0, 0 );
 }
 .swiper-container .swiper-wrapper:after {
     content: "";
