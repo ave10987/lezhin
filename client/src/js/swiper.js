@@ -203,7 +203,7 @@
 	};
 
 	Swiper.prototype.setEvent = function () {
-		console.log( 'orientationChange' );
+
 		var that = this,
 			touchstart = that.model.getIsMobileDevice() ? 'touchstart' : 'mousedown';
 
@@ -316,7 +316,7 @@
 				that.$wrapper.css( Utils.setVendorPrefix( 'transform', 'translate3d( ' + that.$wrapper.attr( 'data-transform' ) + '%, 0, 0 )' ) );
 			}
 		}
-		console.log( 'touchEnd' );
+
 		if( !that.sliding ) {
 			var $target = $( e.target );
 			if ( $target.hasClass( 'swiper-bullet') ) {
