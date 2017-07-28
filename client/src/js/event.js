@@ -4,12 +4,12 @@ var Event = function ( sender ) {
 };
 
 // 이벤트 등록
-Event.prototype.attach = function ( listener ) {
+Event.prototype.observe = function ( listener ) {
     this.listeners.push( listener );
 };
 
 // 이벤트 발생
-Event.prototype.emit = function ( args ) {
+Event.prototype.notify = function ( args ) {
     var i = 0;
     for( i = 0; i < this.listeners.length; i++ ) {
         this.listeners[ i ]( this.sender, args );

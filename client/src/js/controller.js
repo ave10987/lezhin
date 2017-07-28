@@ -10,8 +10,8 @@
         var screenMode = $( window ).width() > 768 ? 'desktop' : 'mobile',
             count = 4;
 
-        this.view.eScreenModeChanged.attach( this.screenModeChanged.bind( this ) );
-        this.view.eOrientationChanged.attach( this.orientationChanged.bind( this ) );
+        this.view.eScreenModeChanged.observe( this.screenModeChanged.bind( this ) );
+        this.view.eOrientationChanged.observe( this.orientationChanged.bind( this ) );
 
         // set screen mode
         this.model.setScreenMode( screenMode );
@@ -33,13 +33,13 @@
 
     Controller.prototype.getMobileBanner = function ( count ) {
         return window.Utils.sendAjax({
-            url: 'http://localhost:8888/banner?device=mobile&count=' + count
+            url: window.location.origin + '/banner?device=mobile&count=' + count
         });
     };
 
     Controller.prototype.getDesktopBaner = function ( count ) {
         return window.Utils.sendAjax({
-            url: 'http://localhost:8888/banner?device=desktop&count=' + count
+            url: window.location.origin + '/banner?device=desktop&count=' + count
         });
     };
 

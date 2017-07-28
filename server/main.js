@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const port = '8888';
-const uri = 'http://localhost:' + port;
 
 const app = express();
 

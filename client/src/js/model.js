@@ -23,7 +23,7 @@
 	Model.prototype.setScreenMode = function ( screenMode ) {
 		var isFirst = this.screenMode === '';
 		this.screenMode = screenMode;
-		this.eScreenModeChanged.emit();
+		this.eScreenModeChanged.notify();
 		if( !isFirst ) {
 			this.setSlides( 'update' );
 		}
@@ -56,11 +56,11 @@
 
 		// status가 update인 경우 즉 orientationchange이벤트가 발생한 경우는 eSlideUpdate 이벤트를 발생
 		if( status === 'update' ) {
-			this.eSlidesUpdate.emit();
+			this.eSlidesUpdate.notify();
 
 		// status가 update가 아닌 경우 즉 새로 slide를 로딩한 경우 eSlideLoaded 이벤트를 발생
 		} else {
-			this.eSlidesLoaded.emit();
+			this.eSlidesLoaded.notify();
 		}
 	};
 

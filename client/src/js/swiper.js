@@ -14,9 +14,9 @@
 		this.eOrientationChanged = new Event( this );
 
 		// event handler등록
-		this.model.eSlidesLoaded.attach( this.slidesLoaded.bind( this ) );
-		this.model.eSlidesUpdate.attach( this.slidesUpdate.bind( this ) );
-		this.model.eScreenModeChanged.attach( this.screenModeChanged.bind( this ) );
+		this.model.eSlidesLoaded.observe( this.slidesLoaded.bind( this ) );
+		this.model.eSlidesUpdate.observe( this.slidesUpdate.bind( this ) );
+		this.model.eScreenModeChanged.observe( this.screenModeChanged.bind( this ) );
 	};
 
 	// screen크기가 변경되어 mobile > desktop, desktop > mobile 크기로 변경되었을 때 수행
@@ -238,7 +238,7 @@
 
 			// orientationchange이벤트 발생 시 event 초기화
 			if( e.type === 'orientationchange' ) {
-				that.eOrientationChanged.emit();
+				that.eOrientationChanged.notify();
 				that.setEvent();
 			}
 
@@ -247,11 +247,11 @@
 
 			// screenMode 감지
 			if( $( window ).width() > 768 && that.screenMode === 'mobile' ) {
-				that.eScreenModeChanged.emit( {
+				that.eScreenModeChanged.notify( {
 					screenMode: 'desktop'
 				});
 			} else if ( $( window ).width() <= 768 && that.screenMode === 'desktop' ) {
-				that.eScreenModeChanged.emit( {
+				that.eScreenModeChanged.notify( {
 					screenMode: 'mobile'
 				});
 			}
