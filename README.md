@@ -4,11 +4,12 @@
 ```
 
 // npm install ( api server를 위한 express 설치 )
-npm install
+1. npm install
 
 // local api server 실행
-node server/main.js
+2. node server/main.js
 
+3. localhost:8888 접속
 ```
 
 ### Options
