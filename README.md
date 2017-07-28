@@ -1,4 +1,4 @@
-# lezhin
+# lezhin-homework
 
 ### How To Use
 ```
