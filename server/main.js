@@ -6,7 +6,7 @@ const uri = 'http://localhost:' + port;
 
 const app = express();
 
-app.use('/', express.static('../client'));
+app.use('/', express.static(path.join( __dirname, '../client')));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname + '../client/index.html'));
@@ -21,7 +21,7 @@ app.get('/banner', (req, res) => {
     device = 'mobile';
   }
 
-  dataUrl = './db/' + device + '.json';
+  dataUrl = path.join(__dirname + '/db/' + device + '.json');
 
   fs.readFile(dataUrl, 'utf8', ( error, data ) => {
     let parsedData = JSON.parse( data );
@@ -35,7 +35,7 @@ app.get('/banner', (req, res) => {
   });
 });
 
-console.log('> Starting dev server...')
+console.log('> Starting dev server...');
 app.listen(port, () => {
 	console.log('Listening on port 8888');
 });
