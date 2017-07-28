@@ -11,7 +11,7 @@
 3. localhost:8888 접속
 ```
 
-### Options
+### Swiper Options
 ```
 /*
  * containerId      {String}   banner를 생성할 element id (mandatory)
