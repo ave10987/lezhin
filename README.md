@@ -15,10 +15,10 @@
 ### Options
 ```
 /*
- * {String}   containerId: banner를 생성할 element id (mandatory)
- * {Boolean}  autoPlay: 자동 slide 여부 (optional default : false )
- * {Boolean}  infinity: 무한 swipe 여부 (optional default : false )
- * {Number}   autoplayDuration: 자동 slide 시간
+ * containerId      {String}   banner를 생성할 element id (mandatory)
+ * autoPlay         {Boolean}  autoPlay: 자동 slide 여부 (optional default : false )
+ * infinity         {Boolean}  infinity: 무한 swipe 여부 (optional default : false )
+ * autoplayDuration {Number}   autoplayDuration: 자동 slide 시간
  */
 var options = {
     containerId: 'lezhin-swiper',
