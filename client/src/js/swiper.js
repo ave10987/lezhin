@@ -88,7 +88,8 @@
 		// slide의 이미지와 링크를 교체 ( desktop -> mobile || mobile -> desktop )
 		this.$wrapper.find( '.swiper-slider' ).each( function ( i, v ) {
 			var $image = $( v ).find ( 'img' ),
-				$link = $( v ).find ( 'a ' );
+				$link = $( v ).find ( 'a' );
+
 			$image.attr( {
 				'src': ( that.screenMode === 'mobile' ) ? $image.attr( 'data-mobile' ) : $image.attr( 'data-desktop' )
 			});
@@ -140,8 +141,8 @@
 			// link 속성 설정
 			$link.attr( {
 				'href': this.slideData[ 0 ].link,
-				'data-desktop': this.getDesktopSlides()[ 0 ].link,
-				'data-mobile': this.getMobileSlides()[ 0 ].link
+				'data-desktop': this.model.getDesktopSlides()[ 0 ].link,
+				'data-mobile': this.model.getMobileSlides()[ 0 ].link
 			});
 			$link.append( $image );
 			$slider.append( $link );
@@ -353,7 +354,7 @@
 		});
 
 		// banner이미지가 2개 이상인 경우
-		if( that.slideData.length > 2 ) {
+		if( that.slideData.length > 1 ) {
 
 			// swipe거리가 throttle보다 크면 swipe동작으로 인식
 			if( that.touchStartX - that.touchEndX > throttle ) {
