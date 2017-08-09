@@ -26,7 +26,9 @@
 
 	// Ajax를 통해 slide를 구성할 모든 데이터를 받아왔을 때 수행
 	Swiper.prototype.slidesLoaded = function () {
+		// slide 정보를 가져옴
 		this.slideData = this.model.getSlides();
+		// swiper 초기화 진행
 		this.initSwiper();
 	};
 
@@ -38,10 +40,15 @@
 		this.$container.empty();
 
 		this.$wrapper = $( '<div class="swiper-wrapper" data-transform="0"></div>' );
+		// 현재 화면에 보여지는 slide element를 저장
 		this.$currentSlideElement = {};
+		// 이전 페이지를 저장
 		this.$prevSlideElement = {};
+		// 다음 페이지를 저장
 		this.$nextSlideElement = {};
+		// pagination element를 저장
 		this.$pagination = {};
+		// nav button element를 저장
 		this.$navButton = {};
 
 		// swiperData
@@ -55,12 +62,15 @@
 		if( !!this.autoPlayInterval ) {
 			window.clearInterval( this.autoPlayInterval );
 		} else {
+			// 존재하지 않으면 빈 객체로 초기화
 			this.autoPlayInterval = {};
 		}
 
 		// set swiper container
 		this.$container.addClass( 'swiper-container' );
+		// container에 wrapper element 추가
 		this.$container.append( this.$wrapper );
+		// container height 설정
 		this.setContainerHeight();
 
 		// slide 생성
@@ -69,6 +79,7 @@
 		// pagination 생성
 		this.$pagination = this.createPagination( this.slideData.length );
 
+		// slide가 1개밖에 없는 경우는 nav button 생성 안함
 		if( this.slideData.length > 1 ) {
 			// navButton 생성
 			this.$navButton = this.createNavButton();
@@ -109,7 +120,6 @@
 		} else if ( this.screenMode === 'desktop' ) {
 			this.$container.height( ( $( window ).width() * 0.32 ) );
 		}
-
 	};
 
 	// slide element 설정
@@ -128,7 +138,7 @@
 		}
 
 		// slide 생성
-		// banner가 1개밖에 없는 경우
+		// slide가 1개밖에 없는 경우
 		if( this.slideData.length === 1 ) {
 
 			// image 속성 설정
@@ -152,7 +162,10 @@
 
 			// banner가 2개 이상인 경우 slide를 3개만 생성
 			for( i = 0; i < 3; i++ ) {
-				slideNumber = i === 0 ? this.slideData.length -1 : i - 1;
+				// 첫번째 slide의 경우 제일 마지막 slide 번호를 할당
+				slideNumber = i === 0 ? this.slideData.length - 1 : i - 1;
+				// data-order: 몇번째 slide인지 파악하기 위한 속성
+				// data-transform: 현재 slide의 위치를 파악하기 위한 속성
 				$slider = $( '<div class="swiper-slider" data-order="' + i + '" data-transform="' + ( ( i - 1 ) * 100 ) + '"></div>' );
 				$link = $( '<a href="' + this.slideData[ slideNumber ].link + '"' +
 							' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].link + '"' +
@@ -160,7 +173,7 @@
 				$image = $( '<img src="' + this.slideData[ slideNumber ].image + '" alt="bannerSlide"' +
 								' data-desktop="' + this.model.getDesktopSlides()[ slideNumber ].image + '"' +
 								' data-mobile="' + this.model.getMobileSlides()[ slideNumber ].image + '">' );
-
+				// slide 위치 설정
 				$slider.css( window.Utils.setVendorPrefix( 'transform', 'translate3d( ' + ( 100 * ( i - 1 ) ) + '%, 0, 0 )' ) );
 
 				$link.append( $image );
@@ -229,7 +242,7 @@
 			touchstart = that.model.getIsMobileDevice() ? 'touchstart' : 'mousedown';
 
 		// touchstart 또는 mousedown handler설정
-		that.$container.off( 'touchstart mousedown' ).on( touchstart, that, that.touchStartHandler);
+		that.$container.off( 'touchstart mousedown' ).on( touchstart, that, that.touchStartHandler );
 
 		// pc환경에서 swipe 수행시 a tag가 click되는 것을 방지
 		that.$container.off( 'click', 'a' ).on( 'click', 'a', that, that.preventLink );
@@ -274,7 +287,8 @@
 			touchmove = that.model.getIsMobileDevice() ? 'touchmove' : 'mousemove',
 			touchend = that.model.getIsMobileDevice() ? 'touchend' : 'mouseup';
 
-		// mouse event의 경우 drag이벤트와 중복되어 이미지가 선택되는 것을 방지
+		// mouse event의 경우 drag이벤트와 중복되어 이미지가 움직이는 것을 방지
+		// safari, firefox에서 주로 발생
 		if( e.type === 'mousedown' ) {
 			e.preventDefault();
 		}
@@ -319,7 +333,7 @@
 		if( that.touchStartX !== null ) {
 			// banner가 1개밖에 없는 경우 swipe방지
 			// infinity설정이 off인 상태에서 가장 처음 또는 가장 마지막 페이지인 경우 swipe방지
-			if( that.slideData.length < 2|| ( ( !that.options.infinity && that.currentIndex === 0 ) && that.touchStartX - touch.pageX < 0 ) ||
+			if( that.slideData.length < 2 || ( ( !that.options.infinity && that.currentIndex === 0 ) && that.touchStartX - touch.pageX < 0 ) ||
 				( ( !that.options.infinity && that.currentIndex === that.slideData.length - 1 ) && that.touchStartX - touch.pageX > 0 ) ) {
 				return;
 			} else {
@@ -345,6 +359,7 @@
 			e.preventDefault();
 		}
 
+		// touchend x position 설정
 		that.touchEndX = touch.pageX;
 
 		// wrapper transition 속성 복구
@@ -402,6 +417,7 @@
 	Swiper.prototype.moveNext = function () {
 		var $tempElement = {},
 			nextIndex = 0,
+			// 300은 prevElement가 nextElement로 변경되기 위한 transform 값
 			moveX = parseInt( this.$prevSlideElement.attr( 'data-transform' ), 10 ) + 300;
 
 		// infinity 설정이 true이거나
